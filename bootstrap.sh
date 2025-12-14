@@ -96,12 +96,20 @@ fi
 
 log_info "Cloning repository..."
 
-# Use nix shell to provide git
-nix shell nixpkgs#git --quiet --command git clone \
-  https://github.com/nnosal/nix-dotfiles.git "$CLONE_PATH" || {
-  log_err "Failed to clone repository"
-  exit 1
-}
+# Clone directly without nix shell for git (simpler and works)
+if command -v git &> /dev/null; then
+  # Git already installed, use it directly
+  git clone https://github.com/nnosal/nix-dotfiles.git "$CLONE_PATH" || {
+    log_err "Failed to clone repository"
+    exit 1
+  }
+else
+  # Use nix to provide git temporarily
+  nix-shell -p git --run "git clone https://github.com/nnosal/nix-dotfiles.git '$CLONE_PATH'" || {
+    log_err "Failed to clone repository"
+    exit 1
+  }
+fi
 
 log_ok "Repository cloned to: $CLONE_PATH"
 
