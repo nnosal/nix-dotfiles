@@ -1,0 +1,24 @@
+# Unix line endings
+* text=auto
+*.sh eol=lf
+*.bash eol=lf
+*.zsh eol=lf
+*.nix eol=lf
+*.toml eol=lf
+*.json eol=lf
+*.yaml eol=lf
+*.yml eol=lf
+*.md eol=lf
+
+# Windows line endings
+*.ps1 eol=crlf
+*.cmd eol=crlf
+*.bat eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.lock binary
