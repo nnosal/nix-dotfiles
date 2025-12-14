@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
 ##############################################################################
-# 🚀 NIX-DOTFILES BOOTSTRAP
-# One-liner entry point for zero-dependency setup
-# Usage: curl https://raw.githubusercontent.com/nnosal/nix-dotfiles/main/bootstrap.sh | bash
+# 🚀 NIX-DOTFILES BOOTSTRAP - SIMPLIFIED
+# One-liner: curl https://raw.githubusercontent.com/nnosal/nix-dotfiles/main/bootstrap.sh | bash
 ##############################################################################
 
 set -euo pipefail
@@ -13,7 +12,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 log_info() { echo -e "${BLUE}ℹ️${NC}  $1"; }
 log_ok() { echo -e "${GREEN}✓${NC}  $1"; }
@@ -21,101 +20,122 @@ log_warn() { echo -e "${YELLOW}⚠️${NC}  $1"; }
 log_err() { echo -e "${RED}✗${NC}  $1" >&2; }
 
 ##############################################################################
-# Phase 1: Détection de l'OS
+# Phase 1: OS Detection
 ##############################################################################
 
 log_info "Detecting platform..."
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   OS="darwin"
-  ARCH=$(uname -m)
-  if [[ "$ARCH" == "arm64" ]]; then
-    SYSTEM="aarch64-darwin"
-  else
-    SYSTEM="x86_64-darwin"
-  fi
+  SYSTEM="$(uname -m)-darwin"
 elif [[ "$OSTYPE" == "linux"* ]]; then
   OS="linux"
-  ARCH=$(uname -m)
-  if [[ "$ARCH" == "aarch64" ]]; then
-    SYSTEM="aarch64-linux"
-  else
-    SYSTEM="x86_64-linux"
-  fi
+  SYSTEM="$(uname -m)-linux"
 else
   log_err "Unsupported OS: $OSTYPE"
   exit 1
 fi
 
-log_ok "System detected: $SYSTEM"
+log_ok "System: $SYSTEM"
 
 ##############################################################################
-# Phase 2: Vérifier/Installer Nix
+# Phase 2: Install Nix if needed
 ##############################################################################
 
 if ! command -v nix &> /dev/null; then
-  log_warn "Nix not found. Installing..."
+  log_warn "Installing Nix (unattended)..."
   if [ "$OS" = "darwin" ]; then
-    # Installer Nix sur macOS
-    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
   else
-    # Installer Nix sur Linux
-    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --init none
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm --init none
   fi
-  log_ok "Nix installed successfully"
+  log_ok "Nix installed"
 else
   log_ok "Nix already installed"
 fi
 
-# Sourcer l'environnement Nix
-if [ -f ~/.nix-profile/etc/profile.d/nix.sh ]; then
-  source ~/.nix-profile/etc/profile.d/nix.sh
+# Source Nix environment (try multiple paths)
+if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+  . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+elif [ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
+  . "$HOME/.nix-profile/etc/profile.d/nix.sh"
 fi
 
+# Verify nix works
+if ! command -v nix &> /dev/null; then
+  log_err "Nix not found in PATH. Please restart terminal and try again."
+  exit 1
+fi
+
+log_ok "Nix ready: $(nix --version)"
+
 ##############################################################################
-# Phase 3: Clone le repo dans un shell éphémère avec Git + Gum
+# Phase 3: Clone Repository
 ##############################################################################
 
-log_info "Creating ephemeral shell with Git and Gum..."
-
-nix shell nixpkgs#{git,gum} --command bash << 'EPHEMERAL_SHELL'
-  set -euo pipefail
-  
-  # Réutiliser les fonctions de log
-  log_info() { echo -e "${BLUE}ℹ️${NC}  $1"; }
-  log_ok() { echo -e "${GREEN}✓${NC}  $1"; }
-  log_warn() { echo -e "${YELLOW}⚠️${NC}  $1"; }
-  
-  # Demander le chemin de clone
-  DEFAULT_PATH="$HOME/dotfiles"
-  CLONE_PATH=$(gum input --placeholder "Clone directory" --value "$DEFAULT_PATH")
-  CLONE_PATH=${CLONE_PATH:-$DEFAULT_PATH}
-  
-  if [ -d "$CLONE_PATH" ]; then
-    log_warn "Directory already exists: $CLONE_PATH"
-    if ! gum confirm "Overwrite?"; then
-      log_err "Cancelled"
-      exit 1
-    fi
-    rm -rf "$CLONE_PATH"
-  fi
-  
-  log_info "Cloning repository..."
-  git clone https://github.com/nnosal/nix-dotfiles.git "$CLONE_PATH"
-  log_ok "Repository cloned to $CLONE_PATH"
-  
-  cd "$CLONE_PATH"
-  
-  # Lancer le setup interactif
-  log_info "Starting interactive setup..."
-  mise run bootstrap
-  
-EPHEMERAL_SHELL
-
-log_ok "Bootstrap completed! 🎉"
-log_info "Your dotfiles are ready at: $CLONE_PATH"
+log_info "Preparing to clone repository..."
 echo ""
-echo "Next steps:"
-echo "  cd $CLONE_PATH"
-echo "  mise run ui"
+
+DEFAULT_PATH="$HOME/dotfiles"
+echo "Where to clone the repository?"
+echo "Default: $DEFAULT_PATH"
+read -p "> " CLONE_PATH || CLONE_PATH=""
+CLONE_PATH=${CLONE_PATH:-$DEFAULT_PATH}
+
+# Check if path exists
+if [ -d "$CLONE_PATH" ]; then
+  log_warn "Directory already exists: $CLONE_PATH"
+  read -p "Overwrite? (y/n) " -n 1 REPLY || REPLY=""
+  echo ""
+  if [ "$REPLY" != "y" ] && [ "$REPLY" != "Y" ]; then
+    log_err "Cancelled"
+    exit 0
+  fi
+  rm -rf "$CLONE_PATH"
+fi
+
+log_info "Cloning repository..."
+
+# Use nix shell to provide git
+nix shell nixpkgs#git --quiet --command git clone \
+  https://github.com/nnosal/nix-dotfiles.git "$CLONE_PATH" || {
+  log_err "Failed to clone repository"
+  exit 1
+}
+
+log_ok "Repository cloned to: $CLONE_PATH"
+
+##############################################################################
+# Phase 4: Summary
+##############################################################################
+
+echo ""
+echo "${GREEN}===================================================${NC}"
+echo -e "${GREEN}✓${NC}  ${GREEN}Bootstrap completed!${NC} 🎉"
+echo "${GREEN}===================================================${NC}"
+echo ""
+echo "${BLUE}Next steps:${NC}"
+echo ""
+echo "1. Enter directory:"
+echo "   ${YELLOW}cd $CLONE_PATH${NC}"
+echo ""
+echo "2. (Optional) Review configuration:"
+echo "   ${YELLOW}cat flake.nix${NC}"
+echo ""
+echo "3. Apply system configuration:"
+if [ "$OS" = "darwin" ]; then
+  echo "   ${YELLOW}nix run nixpkgs#nh -- os switch --flake .${NC}"
+else
+  echo "   ${YELLOW}sudo nixos-rebuild switch --flake .${NC}"
+fi
+echo ""
+echo "4. Apply user dotfiles:"
+echo "   ${YELLOW}stow -S stow/common${NC}"
+echo ""
+echo "${BLUE}Documentation:${NC}"
+echo "  - ${YELLOW}README.md${NC} - Quick start"
+echo "  - ${YELLOW}docs/SETUP.md${NC} - Detailed guide"
+echo "  - ${YELLOW}docs/ARCHITECTURE.md${NC} - Design overview"
+echo "  - ${YELLOW}docs/SECRETS.md${NC} - Credential management"
+echo "  - ${YELLOW}docs/TROUBLESHOOTING.md${NC} - Common issues"
 echo ""
