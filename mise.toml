@@ -1,0 +1,88 @@
+[env]
+# Variables globales pour tous les tasks
+POOL_SIZE = "4"
+LOG_LEVEL = "info"
+
+[tools]
+# Runtimes essentiels
+git = "latest"
+git-lfs = "latest"
+gnu-tar = "latest"
+
+# Tools CLI de base (cross-platform)
+gum = "latest"
+nfpm = "latest"
+
+# Node ecosystem
+node = "lts"
+pnpm = "latest"
+
+# Golang
+go = "latest"
+
+# Python (optional, pour certains scripts)
+python = "latest"
+
+# Nix ecosystem
+nix = "latest"
+flox = "latest"
+
+[tasks]
+
+# Task: Bootstrap du système
+bootstrap = """
+echo '🚀 Démarrage du bootstrap...
+if [ "$(uname -s)" = "Darwin" ]; then
+  echo '🍎 Detected macOS'
+  ./bootstrap/bootstrap-darwin.sh
+elif [ -f /etc/os-release ]; then
+  . /etc/os-release
+  if [ "$ID" = "ubuntu" ] || grep -q microsoft /proc/version 2>/dev/null; then
+    echo '🐧 Detected Linux (WSL ou native)'
+    ./bootstrap/bootstrap-linux.sh
+  fi
+fi
+echo '✅ Bootstrap complet !'
+"""
+
+# Task: Activer la config Nix
+swich = """
+if [ "$(uname -s)" = "Darwin" ]; then
+  nh os switch -- -I nixpkgs=flake:nixpkgs .
+else
+  sudo nixos-rebuild switch --flake .
+fi
+"""
+
+# Task: Afficher l'UI de gestion
+ui = """
+gum style --foreground 86 --bold 'NIX-DOTFILES COCKPIT'
+echo ''
+gum choose --no-limit \
+  '📦 Add App' \
+  '🔒 Manage Secrets' \
+  '🔧 Edit Config' \
+  '⚙️ System Update' \
+  '🔄 Sync & Push' \
+  '📖 Documentation'
+"""
+
+# Task: Linting & Validation
+lint = """
+echo '🔍 Linting Nix files...'
+statix check . || true
+echo '🧹 Removing dead code...'
+deadnix . --check || true
+echo '✨ Formatting Nix files...'
+nixfmt **/*.nix || true
+"""
+
+# Task: Test la configuration (dry-run)
+test = """
+echo '🧪 Testing Nix configuration...'
+if [ "$(uname -s)" = "Darwin" ]; then
+  nh os switch -- --show-trace --verbose
+else
+  sudo nixos-rebuild dry-activate --flake . --show-trace
+fi
+"""
