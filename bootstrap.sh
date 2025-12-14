@@ -96,20 +96,35 @@ fi
 
 log_info "Cloning repository..."
 
-# Clone directly without nix shell for git (simpler and works)
+# 🔥 FIX: Create a temporary script to ensure proper variable expansion
+TMP_CLONE_SCRIPT="/tmp/nix-dotfiles-clone-$$.sh"
+cat > "$TMP_CLONE_SCRIPT" << EOF
+#!/usr/bin/env bash
+set -euo pipefail
+git clone https://github.com/nnosal/nix-dotfiles.git "$CLONE_PATH"
+EOF
+
+chmod +x "$TMP_CLONE_SCRIPT"
+
+# Execute the clone
 if command -v git &> /dev/null; then
-  # Git already installed, use it directly
-  git clone https://github.com/nnosal/nix-dotfiles.git "$CLONE_PATH" || {
+  # Git already installed
+  bash "$TMP_CLONE_SCRIPT" || {
+    rm -f "$TMP_CLONE_SCRIPT"
     log_err "Failed to clone repository"
     exit 1
   }
 else
-  # Use nix to provide git temporarily
-  nix-shell -p git --run "git clone https://github.com/nnosal/nix-dotfiles.git '$CLONE_PATH'" || {
+  # Use nix to provide git
+  nix-shell -p git --run "bash $TMP_CLONE_SCRIPT" || {
+    rm -f "$TMP_CLONE_SCRIPT"
     log_err "Failed to clone repository"
     exit 1
   }
 fi
+
+# Clean up temp script
+rm -f "$TMP_CLONE_SCRIPT"
 
 log_ok "Repository cloned to: $CLONE_PATH"
 
