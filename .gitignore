@@ -1,0 +1,59 @@
+# Nix
+/result
+/result-*
+*.drv
+.envrc
+.dirlocals
+
+# Home Manager
+.config/home-manager/state-version
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+*~
+.history
+
+# Linux
+.cache
+.local/share
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vim/
+
+# Secrets (should never be in git)
+.env
+.env.local
+.env.*.local
+ secrets/
+.ssh/config
+!.ssh/config.d/
+
+# OS temp files
+Thumbs.db
+*.log
+
+# Mise
+.mise.local.toml
+
+# Build artifacts
+target/
+ dist/
+ build/
+*.o
+ *.a
+ *.so
+
+# Package managers
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+poetry.lock
+Gemfile.lock
