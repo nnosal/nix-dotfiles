@@ -96,35 +96,24 @@ fi
 
 log_info "Cloning repository..."
 
-# 🔥 FIX: Create a temporary script to ensure proper variable expansion
-TMP_CLONE_SCRIPT="/tmp/nix-dotfiles-clone-$$.sh"
-cat > "$TMP_CLONE_SCRIPT" << EOF
-#!/usr/bin/env bash
-set -euo pipefail
-git clone https://github.com/nnosal/nix-dotfiles.git "$CLONE_PATH"
-EOF
+# 🔥 FIX: Use direct variable expansion (NO heredoc, NO script file)
+REPO_URL="https://github.com/nnosal/nix-dotfiles.git"
 
-chmod +x "$TMP_CLONE_SCRIPT"
-
-# Execute the clone
 if command -v git &> /dev/null; then
   # Git already installed
-  bash "$TMP_CLONE_SCRIPT" || {
-    rm -f "$TMP_CLONE_SCRIPT"
+  git clone "$REPO_URL" "$CLONE_PATH" || {
     log_err "Failed to clone repository"
     exit 1
   }
 else
-  # Use nix to provide git
-  nix-shell -p git --run "bash $TMP_CLONE_SCRIPT" || {
-    rm -f "$TMP_CLONE_SCRIPT"
+  # Use nix to provide git - export variables first
+  export CLONE_PATH
+  export REPO_URL
+  nix-shell -p git --run 'git clone "$REPO_URL" "$CLONE_PATH"' || {
     log_err "Failed to clone repository"
     exit 1
   }
 fi
-
-# Clean up temp script
-rm -f "$TMP_CLONE_SCRIPT"
 
 log_ok "Repository cloned to: $CLONE_PATH"
 
