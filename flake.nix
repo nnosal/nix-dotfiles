@@ -39,6 +39,15 @@
         modules = [ ./hosts/infra/contabo1/default.nix ];
       };
 
+      # CI/Test Target: Composes production host with dummy hardware
+      nixosConfigurations."test-linux" = lib.mkSystem {
+        system = "x86_64-linux";
+        modules = [
+          ./hosts/infra/contabo1/default.nix
+          ./tests/dummy_hardware.nix
+        ];
+      };
+
       # Entry point for WSL (Home Manager standalone mostly, or NixOS-WSL if used full distro)
       # Assuming Home Manager standalone for WSL based on "Partie 4: WSL géré par Home-Manager"
       # But usually we expose it via homeConfigurations if not using NixOS
