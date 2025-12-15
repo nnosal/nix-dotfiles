@@ -33,6 +33,9 @@ in builder {
       home-manager.useUserPackages = true;
       home-manager.extraSpecialArgs = { inherit inputs; };
       home-manager.backupFileExtension = "backup"; # Avoid conflict with existing files
+      home-manager.sharedModules = [
+        inputs.stylix.homeModules.stylix
+      ];
     }
   ];
 }

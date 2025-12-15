@@ -2,7 +2,6 @@
 {
   imports = [
     ../../../modules/darwin
-    ../../../modules/common
   ];
 
   networking.hostName = "macbook-pro";

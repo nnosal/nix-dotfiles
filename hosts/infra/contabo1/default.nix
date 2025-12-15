@@ -2,7 +2,6 @@
 {
   imports = [
     ../../../modules/linux
-    ../../../modules/common
   ];
 
   networking.hostName = "contabo1";

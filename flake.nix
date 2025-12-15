@@ -15,7 +15,9 @@
 
     # Tools
     hk.url = "github:jdx/hk";
+    hk.flake = false;
     fnox.url = "github:jdx/fnox";
+    fnox.flake = false;
 
     # Hardware optimizations
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
