@@ -25,7 +25,7 @@ if [ "$APPLY_ONLY" = "true" ]; then
 
     # 2. Nix Switch (using nh if available, else nix)
     if command -v nh >/dev/null; then
-        nh os switch
+        nh os switch .
     else
         # Fallback detection
         if [ "$(uname)" = "Darwin" ]; then
@@ -37,55 +37,44 @@ if [ "$APPLY_ONLY" = "true" ]; then
     exit 0
 fi
 
-# Main Menu Loop
+# Main Menu Loop (Spec Part 6)
 while true; do
     clear
-    gum style --border normal --margin "1" --padding "1 2" --border-foreground 212 "🚀 ULTIMATE DOTFILES COCKPIT"
+    gum style --border double --margin "1" --padding "1 2" --border-foreground 212 "🎛️  ULTIMATE COCKPIT"
 
     CHOICE=$(gum choose \
-        "🔄 Apply Configuration (Switch)" \
-        "🔗 Manage Symlinks (Stow)" \
-        "✨ Add New App (Wizard)" \
-        "🖥️  Add New Host (Wizard)" \
-        "🔒 Manage Secrets (Fnox)" \
-        "👋 Exit")
+        "🔄 Appliquer (Switch Nix)" \
+        "🔗 Relier Dotfiles (Stow)" \
+        "✨ Ajouter (App/Host/User)" \
+        "✏️  Éditer une config (Fuzzy)" \
+        "🔒 Gérer Secrets (Fnox)" \
+        "🚀 Sauvegarder (Git Push)" \
+        "🧹 Nettoyer (Garbage Collect)" \
+        "🗑️  Désinstaller une App" \
+        "🚪 Quitter")
 
     case "$CHOICE" in
-        "🔄 Apply Configuration (Switch)")
-            gum spin --spinner dot --title "Switching..." -- ./scripts/cockpit.sh --apply-only
+        "🔄 Appliquer"*)
+            mise run switch
             gum confirm "Done! Press Enter to continue" && continue
             ;;
-        "🔗 Manage Symlinks (Stow)")
-             ./scripts/stow-apply.sh
+        "🔗 Relier"*)
+             mise run stow
              gum confirm "Done! Press Enter to continue" && continue
             ;;
-        "✨ Add New App (Wizard)")
-            gum style --foreground 212 "TODO: Add App Wizard"
-            sleep 1
+        "✨ Ajouter"*)
+            SUB=$(gum choose "Application (Cask/Pkg)" "Machine (Host)" "Utilisateur")
+            case $SUB in
+                "Application"*) ./scripts/wizards/add-app.sh ;;
+                "Machine"*)     ./scripts/wizards/add-host.sh ;;
+                "Utilisateur"*) ./scripts/wizards/add-user.sh ;;
+            esac
             ;;
-        "🔒 Manage Secrets (Fnox)")
-            # Interactive Fnox
-            KEY=$(gum input --placeholder "Secret Name (e.g. STRIPE_KEY)")
-            [ -z "$KEY" ] && continue
-            VAL=$(gum input --password --placeholder "Secret Value")
-            [ -z "$VAL" ] && continue
-
-            # Use system specific tool to add to keychain
-            if [ "$(uname)" = "Darwin" ]; then
-                security add-generic-password -a "$USER" -s "$KEY" -w "$VAL"
-            else
-                echo "Linux secret tool not implemented in this skeleton yet"
-            fi
-
-            # Update fnox.toml
-            if ! grep -q "$KEY" fnox.toml; then
-                echo "$KEY = \"keychain://$KEY\"" >> fnox.toml
-            fi
-            gum style --foreground 212 "Secret added to Keychain and fnox.toml mapped!"
-            sleep 2
-            ;;
-        "👋 Exit")
-            exit 0
-            ;;
+        "✏️  Éditer"*)      ./scripts/wizards/edit.sh ;;
+        "🔒 Gérer"*)       ./scripts/wizards/secret.sh ;;
+        "🚀 Sauvegarder"*)  mise run save ;;
+        "🧹 Nettoyer"*)     mise run gc ;;
+        "🗑️  Désinstaller"*) ./scripts/wizards/remove-app.sh ;;
+        "🚪 Quitter")      exit 0 ;;
     esac
 done

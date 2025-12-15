@@ -1,0 +1,6 @@
+# Force LF (Unix style) pour tous les fichiers textuels, même sur Windows
+* text=auto eol=lf
+
+# Exceptions binaires
+*.png binary
+*.pkl binary

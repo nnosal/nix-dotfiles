@@ -1,6 +1,7 @@
 { pkgs, lib, config, ... }:
 {
   home.packages = with pkgs; [
+    # %% PACKAGES %%
     # Core Tools
     git
     curl
@@ -15,6 +16,7 @@
     # Task Runner & UI
     mise
     gum
+    nh
 
     # Editors
     neovim
