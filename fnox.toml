@@ -1,0 +1,17 @@
+# Fnox Configuration - Zero Trust Secret Mapping
+# Maps environment variables to Keychain entries.
+# No secrets are stored here.
+
+[secrets]
+# Example: OpenAI Key for dev tools
+OPENAI_API_KEY = "keychain://openai_api_key"
+
+# Example: Stripe Secret for work
+STRIPE_SECRET_KEY = "keychain://stripe_secret_key"
+
+# Example: AWS Access Key
+AWS_ACCESS_KEY_ID = "keychain://aws_access_key_id"
+AWS_SECRET_ACCESS_KEY = "keychain://aws_secret_access_key"
+
+# Github Token for release/scripts
+GITHUB_TOKEN = "keychain://github_token"

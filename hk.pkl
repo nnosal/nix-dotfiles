@@ -1,0 +1,27 @@
+// hk.pkl - Git Hooks Configuration
+amends "package://github.com/jdx/hk/releases/download/v0.0.1/hk.pkl"
+
+import "package://github.com/jdx/hk/releases/download/v0.0.1/linters.pkl"
+
+// Hook configuration
+// We want to prevent committing private keys and ensure formatting.
+
+hooks {
+  ["pre-commit"] {
+    // 1. Secret Detection (The most critical part of Zero-Trust)
+    // We grep for private key headers.
+    run("Detect Private Keys") {
+      script = """
+        if grep -r "BEGIN OPENSSH PRIVATE KEY" .; then
+          echo "🚨 CRITICAL: Private key detected in files!"
+          exit 1
+        fi
+      """
+    }
+
+    // 2. Nix Formatting
+    run("Nix Format") {
+      script = "nix fmt -- --check"
+    }
+  }
+}

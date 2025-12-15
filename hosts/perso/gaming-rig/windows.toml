@@ -1,0 +1,11 @@
+# Native Windows Configuration via Mise
+# This handles tools installed on Windows side (not WSL)
+
+[tools]
+"winget:Valve.Steam" = "latest"
+"winget:Microsoft.VisualStudioCode" = "latest"
+"winget:Discord.Discord" = "latest"
+"winget:Spotify.Spotify" = "latest"
+
+[tasks.install]
+run = "mise install"

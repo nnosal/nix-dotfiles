@@ -1,0 +1,35 @@
+[tools]
+gum = "latest"
+hk = "latest"
+nh = "latest" # Nix Helper for faster rebuilds
+
+[tasks.install]
+description = "Install dependencies and setup environment"
+run = "scripts/cockpit.sh --apply-only"
+
+[tasks.ui]
+description = "Launch the Main Menu (Cockpit)"
+run = "scripts/cockpit.sh"
+
+[tasks.switch]
+description = "Apply Nix configuration"
+run = "nh os switch"
+
+[tasks.save]
+description = "Commit and push changes with linting"
+run = """
+#!/usr/bin/env bash
+git add .
+hk run # Run hooks manually before commit if needed
+git commit -m "$1"
+git push
+"""
+
+[tasks.stow]
+description = "Manage symlinks"
+run = "scripts/stow-apply.sh"
+
+[tasks.test-mac]
+description = "🧪 Lance une VM Tart et teste l'installation complète"
+depends = ["install"]
+run = "./scripts/ci/test-darwin.sh"
