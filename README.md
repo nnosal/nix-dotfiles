@@ -32,10 +32,38 @@ This repository is designed with a **Zero-Trust** and **Multi-Tenant** philosoph
 
 ### Directory Structure
 
--   `hosts/`: Hardware definitions (MacBook, VPS, Gaming PC).
--   `users/`: User profiles (Dev tools, Shell config).
--   `modules/`: Reusable Nix modules (Darwin, Linux, WSL).
--   `stow/`: Mutable dotfiles (Zsh, Neovim) organized by profile (`common`, `work`, `personal`).
+```text
+~/dotfiles/
+├── 📄 README.md                 # This file
+├── 🚀 bootstrap.sh              # Entrypoint (Mac/Linux)
+├── 🚀 bootstrap.ps1             # Entrypoint (Windows)
+│
+├── ⚙️ CORE CONFIGURATION
+│   ├── ❄️ flake.nix             # Nix Flake Definitions (Inputs/Outputs)
+│   ├── 🔧 mise.toml             # Task Runner config (Tools & Tasks)
+│   ├── 🛡️ fnox.toml             # Secrets mapping (Zero-Trust)
+│   └── 🪝 hk.pkl                # Git hooks config (Linting)
+│
+├── 📦 NIX MODULES
+│   ├── 📂 common/               # Shared Configs (Shell, Fonts, Stylix)
+│   ├── 📂 darwin/               # MacOS specific
+│   ├── 📂 linux/                # Server specific
+│   └── 📂 wsl/                  # WSL specific (Interop)
+│
+├── 📂 STOW (Mutable Configs)
+│   ├── 🌍 common/               # Applied everywhere (.zshrc, nvim)
+│   ├── 💼 work/                 # Applied on Work machines (.ssh/work.conf)
+│   └── 🏠 personal/             # Applied on Personal machines (.steam/)
+│
+├── 🖥️ HOSTS
+│   ├── 📂 pro/macbook-pro/      # Host definition (Darwin)
+│   ├── 📂 perso/gaming-rig/     # Host definition (WSL + Windows)
+│   └── 📂 infra/contabo1/       # Host definition (NixOS)
+│
+└── 📜 AUTOMATION
+    ├── cockpit.sh               # Main Menu
+    └── 📂 wizards/              # Helper scripts
+```
 
 ---
 
@@ -49,11 +77,15 @@ mise run ui
 ./scripts/cockpit.sh
 ```
 
-**Common Tasks:**
--   **Apply Config**: `mise run switch` (Rebuilds Nix)
--   **Manage Symlinks**: `mise run stow` (Links dotfiles)
--   **Add App**: `cockpit` -> "Add App"
--   **Secrets**: `cockpit` -> "Manage Secrets"
+### Key Commands
+
+| Command | Description |
+| :--- | :--- |
+| `mise run install` | Initial bootstrap (Install hooks, Apply Nix) |
+| `mise run switch` | **Rebuild Nix System** (Apply changes) |
+| `mise run stow` | **Refresh Symlinks** (Apply mutable configs) |
+| `mise run save` | **Git Push** (Add + Commit + Push with checks) |
+| `mise run gc` | **Garbage Collect** (Free up disk space) |
 
 ---
 
@@ -62,7 +94,7 @@ mise run ui
 We **NEVER** store secrets in Git (not even encrypted).
 Secrets are stored in your **System Keychain** (TouchID / Gnome Keyring) and mapped via `fnox.toml`.
 
-To add a secret:
+To add a secret interactively:
 ```bash
 ./scripts/wizards/secret.sh
 ```
@@ -81,4 +113,4 @@ Run `bootstrap.ps1` to setup the Native side, then enter WSL to setup the Linux 
 
 ## 🛠️ Troubleshooting
 
-See [ULTIMATE_SPEC.md](ULTIMATE_SPEC.md) for detailed architecture and troubleshooting guide.
+See [ULTIMATE_SPEC.md](ULTIMATE_SPEC.md) for detailed architecture, sequence diagrams, and troubleshooting guide.

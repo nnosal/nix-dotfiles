@@ -213,17 +213,86 @@ Configuration des Git Hooks. Interdit le commit si une clé privée est détect�
 
 # ANNEXE B : DIAGRAMMES (MERMAID)
 
-*(Voir section Diagrammes générée précédemment - Insérer ici les graphiques : Architecture, Bootstrap Sequence, Stow Flow, Fnox Security)*
+### 1. 🌍 La "Big Picture"
+
+```mermaid
+graph TD
+    Repo[📁 ~/dotfiles <br/> Single Source of Truth]
+
+    subgraph "🍎 Ecosystem Apple"
+        MacPro[MacBook Pro / Studio]
+        BootstrapMac[🚀 bootstrap.sh]
+        NixDarwin[❄️ nix-darwin]
+        Secretive[🔒 Secretive <br/> TouchID]
+    end
+
+    subgraph "🐧 Ecosystem Linux"
+        VPS[Contabo / RPi]
+        BootstrapLin[🚀 bootstrap.sh]
+        NixOS[❄️ NixOS]
+        Agent[🔒 SSH Agent]
+    end
+
+    subgraph "🪟 Ecosystem Windows"
+        GamingRig[Gaming PC]
+        BootstrapWin[🚀 bootstrap.ps1]
+
+        subgraph "Hybrid Strategy"
+            Native[Powershell Host]
+            WSL[WSL2 Guest]
+        end
+
+        Winget[📦 Winget + Mise]
+        NixWSL[❄️ Nix Home-Manager]
+    end
+
+    Repo --> BootstrapMac
+    BootstrapMac --> NixDarwin
+    NixDarwin --> Secretive
+
+    Repo --> BootstrapLin
+    BootstrapLin --> NixOS
+    NixOS --> Agent
+
+    Repo --> BootstrapWin
+    BootstrapWin --> Native
+    Native -- "Installs & Boots" --> WSL
+    WSL --> NixWSL
+```
 
 ---
 
 # ANNEXE C : SÉQUENCES TECHNIQUES
 
-1. **Zero-Install :** Curl -> Nix Shell (Git/Gum) -> Clone -> Mise Install.
+### 1. Zero-Install Bootstrap
 
-2. **Fnox Flow :** Shell Init -> Fnox Read Config -> Keychain Request -> RAM Injection.
+```mermaid
+sequenceDiagram
+    participant User as 👤 Toi
+    participant Web as 🌐 Curl/Web
+    participant Temp as ⚡ Shell Éphémère
+    participant NixMise as ⚙️ Nix / Mise
+    participant Repo as 📁 ~/dotfiles
 
-3. **Hk Hook :** Git Commit -> Hk Binary -> Pkl Config -> Nixfmt + Secret Scan.
+    User->>Web: 1. "One-Liner" (curl ... | sh)
+    Web->>Temp: Télécharge script d'entrée
+
+    rect rgb(30, 30, 30)
+        note right of Temp: Phase Volatile (RAM)
+        Temp->>NixMise: Installe le Moteur (Nix ou Mise)
+        Temp->>NixMise: "Donne-moi Gum temporairement" (nix shell / mise x)
+        NixMise-->>User: 2. Affiche le TUI (Gum)
+    end
+
+    User->>Temp: Valide l'installation
+    Temp->>Repo: 3. git clone https://github...
+
+    rect rgb(0, 50, 0)
+        note right of Repo: Phase État Stable (Disk)
+        Repo->>NixMise: "mise run install" (Setup final)
+        NixMise->>User: 4. Shell prêt (Zsh/Starship)
+    end
+```
 
 ---
 

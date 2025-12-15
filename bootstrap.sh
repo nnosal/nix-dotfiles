@@ -21,7 +21,7 @@ if ! command -v git >/dev/null || ! command -v gum >/dev/null; then
     echo "📦 Entering Ephemeral Shell (Git + Gum)..."
     # Re-execute this script inside a nix shell with dependencies
     # We pass the current arguments to the nested script
-    exec nix shell nixpkgs#git nixpkgs#gum --command bash "$0" "$@"
+    exec nix shell nixpkgs#git nixpkgs#gum -c bash "$0" "$@"
 fi
 
 # 2. Clone Repository
