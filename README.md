@@ -3,7 +3,7 @@
 > **Universal Infrastructure for macOS, Linux & Windows.**
 > Powered by [Nix](https://nixos.org), [Mise](https://mise.jdx.dev), [Stow](https://www.gnu.org/software/stow/), and [Fnox](https://github.com/jdx/fnox).
 
-[![CI](https://github.com/nnosal/dotfiles/actions/workflows/ci.yml/badge.svg)](https://github.com/nnosal/dotfiles/actions)
+[![CI](https://github.com/nnosal/nix-dotfiles2/actions/workflows/ci.yml/badge.svg)](https://github.com/nnosal/nix-dotfiles2/actions)
 
 ## ⚡️ Quick Start (Zero-Install)
 
@@ -11,12 +11,12 @@ No git clone required. Just run this:
 
 ### 🍎 macOS / 🐧 Linux
 ```bash
-sh <(curl -L https://raw.githubusercontent.com/nnosal/nix-dotfiles2/main/bootstrap.sh)
+sh <(curl -L [https://raw.githubusercontent.com/nnosal/nix-dotfiles2/main/bootstrap.sh](https://raw.githubusercontent.com/nnosal/nix-dotfiles2/refs/heads/jules-ultimate-dotfiles-init-11317754922896183441/bootstrap.sh))
 ```
 
 ### 🪟 Windows (PowerShell)
 ```powershell
-irm https://raw.githubusercontent.com/nnosal/nix-dotfiles2/main/bootstrap.ps1 | iex
+irm https://raw.githubusercontent.com/nnosal/nix-dotfiles2/refs/heads/jules-ultimate-dotfiles-init-11317754922896183441/bootstrap.ps1 | iex
 ```
 
 ---
