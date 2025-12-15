@@ -11,7 +11,7 @@ No git clone required. Just run this:
 
 ### 🍎 macOS / 🐧 Linux
 ```bash
-sh <(curl -L [https://raw.githubusercontent.com/nnosal/nix-dotfiles2/main/bootstrap.sh](https://raw.githubusercontent.com/nnosal/nix-dotfiles2/refs/heads/jules-ultimate-dotfiles-init-11317754922896183441/bootstrap.sh))
+sh <(curl -L https://raw.githubusercontent.com/nnosal/nix-dotfiles2/refs/heads/jules-ultimate-dotfiles-init-11317754922896183441/bootstrap.sh)
 ```
 
 ### 🪟 Windows (PowerShell)
