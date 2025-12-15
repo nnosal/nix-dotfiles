@@ -11,12 +11,12 @@ No git clone required. Just run this:
 
 ### 🍎 macOS / 🐧 Linux
 ```bash
-sh <(curl -L https://dotfiles.nnosal.com)
+sh <(curl -L https://raw.githubusercontent.com/nnosal/dotfiles/main/bootstrap.sh)
 ```
 
 ### 🪟 Windows (PowerShell)
 ```powershell
-irm https://dotfiles.nnosal.com/win | iex
+irm https://raw.githubusercontent.com/nnosal/dotfiles/main/bootstrap.ps1 | iex
 ```
 
 ---
