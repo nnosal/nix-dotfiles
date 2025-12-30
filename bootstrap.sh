@@ -4,7 +4,7 @@ set -e
 # Ultimate Dotfiles Bootstrap
 # Usage: sh <(curl -L https://dotfiles.nnosal.com)
 
-REPO_URL="https://github.com/nnosal/dotfiles.git"
+REPO_URL="https://github.com/nnosal/nix-dotfiles2.git"
 TARGET_DIR="$HOME/dotfiles"
 
 # 1. Zero-Install: Ensure Dependencies (Nix, Git, Gum)
