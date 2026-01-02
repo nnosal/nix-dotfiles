@@ -6,7 +6,7 @@
     "arc"
     "raycast"
     "visual-studio-code"
-    "docker"
+    "orbstack"
     "slack"
   ];
 }

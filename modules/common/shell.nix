@@ -8,7 +8,7 @@
     syntaxHighlighting.enable = true;
 
     # Init Extra: Hook for Fnox (Zero-Trust) and Stow integration
-    initExtra = ''
+    initContent = ''
       # 1. Activer Fnox (Secrets en ENV)
       if command -v fnox > /dev/null; then
         eval "$(fnox activate zsh)"

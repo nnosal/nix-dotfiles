@@ -17,9 +17,8 @@
 
   # Additional Casks for this specific host
   homebrew.casks = [
-    "docker"
+    "orbstack"
     "visual-studio-code"
-    "tart" # For CI
   ];
 
   system.stateVersion = 5;

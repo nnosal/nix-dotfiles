@@ -5,8 +5,9 @@
   ];
 
   # macOS System Defaults
+  system.primaryUser = "admin";
   system.defaults = {
-    dock.autohide = true;
+    dock.autohide = false;
     finder.AppleShowAllExtensions = true;
     NSGlobalDomain.AppleShowAllExtensions = true;
     NSGlobalDomain.InitialKeyRepeat = 15;

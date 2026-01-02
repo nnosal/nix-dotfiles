@@ -10,6 +10,19 @@
 No git clone required. Just run this:
 
 ### 🍎 macOS / 🐧 Linux
+> Testvm:
+```bash
+# Install nix
+if ! command -v nix &> /dev/null && curl -L https://nixos.org/nix/install | sh
+# Clone repo
+git clone https://github.com/nnosal/nix-dotfiles2 ~/dotfiles
+# Activate nix without reboot + reset rc files for nix-darwin + install test
+source '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' && \
+for i in bash zsh; do sudo mv /etc/${i}rc /etc/${i}rc.before-nix-darwin; done && \
+sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes nix-darwin -- switch --flake .#macbook-pro
+zsh -c "nh darwin switch ~/dotfiles #-H macbook-pro"
+```
+
 ```bash
 sh <(curl -L https://raw.githubusercontent.com/nnosal/nix-dotfiles2/refs/heads/jules-ultimate-dotfiles-init-11317754922896183441/bootstrap.sh)
 ```
