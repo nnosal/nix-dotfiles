@@ -127,6 +127,17 @@ jobs:
         if: matrix.is-darwin == true
         run: |
           echo "🧪 Testing nix-darwin switch (simulating fresh install)..."
+          
+          # Adapter le username pour le runner CI
+          export CURRENT_USER=$(whoami)
+          echo "👤 Current user: $CURRENT_USER"
+          
+          # Trouver et remplacer tous les hardcoded usernames dans les fichiers de config
+          find . -type f \( -name "*.nix" -o -name "flake.nix" \) -exec sed -i.bak "s/users\.users\.nnosal/users.users.$CURRENT_USER/g" {} \;
+          find . -type f \( -name "*.nix" -o -name "flake.nix" \) -exec sed -i.bak "s/home\.username = \"nnosal\"/home.username = \"$CURRENT_USER\"/g" {} \;
+          find . -type f \( -name "*.nix" -o -name "flake.nix" \) -exec sed -i.bak "s/\/Users\/nnosal/\/Users\/$CURRENT_USER/g" {} \;
+          
+          # Exécuter le switch avec cachix
           cachix watch-exec nnosal-dotfiles -- \
             sudo nix run nix-darwin -- switch --flake .#macbook-pro
 
