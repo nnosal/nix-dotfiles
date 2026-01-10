@@ -131,40 +131,7 @@ jobs:
           # Détecter l'utilisateur actuel
           export CURRENT_USER=$(whoami)
           echo "👤 Current user: $CURRENT_USER"
-          
-          # Créer un override temporaire pour le username
-          cat > ci-override.nix << EOF
-          { config, pkgs, ... }:
-          {
-            users.users.${CURRENT_USER} = {
-              name = "${CURRENT_USER}";
-              home = "/Users/${CURRENT_USER}";
-            };
-            
-            home-manager.users.${CURRENT_USER} = {
-              home.username = "${CURRENT_USER}";
-              home.homeDirectory = "/Users/${CURRENT_USER}";
-            };
-          }
-          EOF
-          
-          # Modifier temporairement le flake pour inclure l'override
-          cp flake.nix flake.nix.bak
-          
-          # Ajouter l'import de ci-override.nix dans les modules darwin
-          nix eval --impure --expr '
-            let
-              flake = builtins.getFlake (toString ./.);
-              modified = flake // {
-                darwinConfigurations = builtins.mapAttrs (name: config:
-                  config // {
-                    modules = config.modules ++ [ ./ci-override.nix ];
-                  }
-                ) flake.darwinConfigurations;
-              };
-            in
-              modified
-          ' || true
+          sed -i '' "s/system.primaryUser = \"admin\";/system.primaryUser = \"$USER\";/" modules/darwin/default.nix
           
           # Exécuter le switch avec l'utilisateur adapté
           cachix watch-exec nnosal-dotfiles -- \
@@ -200,36 +167,7 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "🧪 Testing Windows bootstrap script..." -ForegroundColor Cyan
-          
-          # Vérifier que le script est valide PowerShell
-          $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content bootstrap.ps1 -Raw), [ref]$null)
-          
-          Write-Host "✅ bootstrap.ps1 syntax is valid" -ForegroundColor Green
-          
-          # Afficher le contenu pour debug
-          Write-Host "📜 Script content:" -ForegroundColor Yellow
-          Get-Content bootstrap.ps1
-          
-          # Simuler l'exécution (sans vraiment installer)
-          Write-Host "🎯 Simulating bootstrap execution..." -ForegroundColor Cyan
-          
-          # Vérifier que winget existe
-          if (Get-Command winget -ErrorAction SilentlyContinue) {
-            Write-Host "✅ Winget is available" -ForegroundColor Green
-          } else {
-            Write-Host "⚠️ Winget not found (expected in CI)" -ForegroundColor Yellow
-          }
-          
-          # Vérifier que Git existe
-          if (Get-Command git -ErrorAction SilentlyContinue) {
-            Write-Host "✅ Git is available" -ForegroundColor Green
-            git --version
-          } else {
-            Write-Host "❌ Git not found" -ForegroundColor Red
-            exit 1
-          }
-          
-          Write-Host "✅ Windows bootstrap test completed" -ForegroundColor Green
+          irm https://raw.githubusercontent.com/nnosal/nix-dotfiles/refs/heads/main/bootstrap.ps1 | iex
 
   # ========================================
   # JOB 4: Security Audit (Disabled)
