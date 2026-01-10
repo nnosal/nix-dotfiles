@@ -2,6 +2,7 @@
 {
   imports = [
     ../../../modules/linux
+    ./hardware-configuration.nix  # Import hardware config for bootloader and filesystems
   ];
 
   networking.hostName = "contabo1";
