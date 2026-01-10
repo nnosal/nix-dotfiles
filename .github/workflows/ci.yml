@@ -88,18 +88,22 @@ jobs:
           - name: "macOS (macbook-pro)"
             config: darwinConfigurations."macbook-pro".system
             os: macos-14
+            is-darwin: true
             
           - name: "Linux VPS (contabo1)"
             config: nixosConfigurations.contabo1.config.system.build.toplevel
             os: ubuntu-latest
+            is-darwin: false
             
           - name: "Linux Test"
             config: nixosConfigurations.test-linux.config.system.build.toplevel
             os: ubuntu-latest
+            is-darwin: false
             
           - name: "WSL (Home Manager)"
             config: homeConfigurations.wsl.activationPackage
             os: ubuntu-latest
+            is-darwin: false
     steps:
       - uses: actions/checkout@v4
       
@@ -116,7 +120,14 @@ jobs:
       - name: Build Configuration
         run: |
           echo "🔨 Building ${{ matrix.name }}..."
-          nix build .#${{ matrix.config }} --dry-run --show-trace
+          cachix watch-exec nnosal-dotfiles -- \
+            nix build .#${{ matrix.config }} --dry-run --show-trace
+      
+      - name: Test nix-darwin switch (README validation)
+        if: matrix.is-darwin == true
+        run: |
+          echo "🧪 Testing nix-darwin switch (simulating fresh install)..."
+          nix run nix-darwin -- switch --flake .#macbook-pro
 
   # ========================================
   # JOB 3: Security Audit
