@@ -127,7 +127,8 @@ jobs:
         if: matrix.is-darwin == true
         run: |
           echo "🧪 Testing nix-darwin switch (simulating fresh install)..."
-          nix run nix-darwin -- switch --flake .#macbook-pro
+          cachix watch-exec nnosal-dotfiles -- \
+            sudo nix run nix-darwin -- switch --flake .#macbook-pro
 
   # ========================================
   # JOB 3: Security Audit
