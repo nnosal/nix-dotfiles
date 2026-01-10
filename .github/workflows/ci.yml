@@ -137,7 +137,8 @@ jobs:
               --exclude-dir=.git \
               --exclude-dir=result \
               --exclude="*.md" \
-              --exclude="ci.yml"; then
+              --exclude="ci.yml" \
+              --exclude=".hk.pkl"; then
               echo "❌ Dangerous pattern detected: $pattern"
               FOUND=1
             fi
