@@ -36,7 +36,7 @@ mise install
 
 # 5. Apply Native Config (Winget apps)
 Write-Host "💿 Installing Windows Apps..."
-mise run install
+#mise run install
 
 Write-Host "✅ Windows Bootstrap Complete!" -ForegroundColor Green
 Write-Host "👉 Now, run 'wsl --install' to setup the Linux subsystem."
