@@ -154,37 +154,42 @@ jobs:
   # ========================================
   # JOB 6: Security Audit
   # ========================================
-security:
-  name: "🔒 Security Checks"
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
-    
-    - uses: cachix/install-nix-action@v25
-      with:
-        extra_nix_config: |
-          experimental-features = nix-command flakes
-    
-    # Builder hk depuis le flake input (déjà défini dans votre flake.nix)
-    - name: Install hk from Flake Input
-      run: |
-        # Créer un shell avec hk disponible
-        nix shell github:jdx/hk -c hk --version
-    
-    # Vérifier qu'aucune clé privée n'est commitée
-    - name: Detect Private Keys
-      run: |
-        # Utiliser le hk du flake input
-        nix shell github:jdx/hk -c hk run detect-private-key || {
-          echo "⚠️ hk detect-private-key non disponible, utilisant grep fallback"
-          ! grep -r "BEGIN.*PRIVATE KEY" . --exclude-dir=.git
-        }
-    
-    # Vérifier que fnox.toml ne contient que des pointeurs
-    - name: Validate Fnox Config
-      run: |
-        if grep -E '(AKIA|ghp_|sk-|-----BEGIN)' fnox.toml 2>/dev/null; then
-          echo "❌ ERREUR: Secret en clair détecté dans fnox.toml!"
+  #test-bootstrap:
+  security:
+    name: "🔒 Security Checks"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: cachix/install-nix-action@v25
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      
+      # Builder hk depuis le flake input (déjà défini dans votre flake.nix)
+      - name: Install hk from Flake Input
+        run: |
+          # Créer un shell avec hk disponible
+          nix shell github:jdx/hk -c hk --version
+      
+      # Vérifier qu'aucune clé privée n'est commitée
+      - name: Detect Private Keys
+        run: |
+          # Utiliser le hk du flake input
+          nix shell github:jdx/hk -c hk run detect-private-key || {
+            echo "⚠️ hk detect-private-key non disponible, utilisant grep fallback"
+            ! grep -r "BEGIN.*PRIVATE KEY" . --exclude-dir=.git
+          }
+      
+      # Vérifier que fnox.toml ne contient que des pointeurs
+      - name: Validate Fnox Config
+        run: |
+          if grep -E '(AKIA|ghp_|sk-|-----BEGIN)' fnox.toml 2>/dev/null; then
+            echo "❌ ERREUR: Secret en clair détecté dans fnox.toml!"
+            exit 1
+          fi
+          echo "✅ Fnox config OK (pointeurs uniquement)"
+
           exit 1
         fi
         echo "✅ Fnox config OK (pointeurs uniquement)"
