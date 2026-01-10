@@ -20,6 +20,11 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
       
+      - uses: cachix/cachix-action@v15
+        with:
+          name: nnosal-dotfiles
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      
       # 1. Validation Nix Flake
       - name: Nix Flake Check
         run: nix flake check --show-trace
@@ -103,6 +108,11 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
       
+      - uses: cachix/cachix-action@v15
+        with:
+          name: nnosal-dotfiles
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      
       - name: Build Configuration
         run: |
           echo "🔨 Building ${{ matrix.name }}..."
@@ -117,39 +127,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Detect Private Keys & Secrets
+      - uses: cachix/install-nix-action@v25
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      
+      - name: Detect Private Keys & Secrets (using hk)
         run: |
-          echo "🔍 Scanning for hardcoded secrets..."
+          echo "🔍 Scanning for hardcoded secrets using hk..."
           
-          PATTERNS=(
-            "BEGIN.*PRIVATE KEY"
-            "BEGIN RSA PRIVATE KEY"
-            "BEGIN OPENSSH PRIVATE KEY"
-            "AKIA[0-9A-Z]{16}"
-            "ghp_[0-9a-zA-Z]{36}"
-            "sk-[0-9a-zA-Z]{48}"
-            "xox[baprs]-[0-9a-zA-Z-]+"
-          )
+          # Build hk from flake
+          nix build .#hk
           
-          FOUND=0
-          for pattern in "${PATTERNS[@]}"; do
-            if grep -rE "$pattern" . \
-              --exclude-dir=.git \
-              --exclude-dir=result \
-              --exclude='*.md' \
-              --exclude='ci.yml' \
-              --exclude='.hk.pkl'; then
-              echo "❌ Dangerous pattern detected: $pattern"
-              FOUND=1
-            fi
-          done
+          # Run security scan with hk
+          ./result/bin/hk scan . \
+            --exclude .git \
+            --exclude result \
+            --exclude '*.md' \
+            --format github-actions
           
-          if [ $FOUND -eq 1 ]; then
-            echo "❌ CRITICAL: Secrets detected in repository!"
-            exit 1
-          fi
-          
-          echo "✅ No hardcoded secrets found"
+          echo "✅ Security scan completed"
       
       - name: Validate Fnox Config (Zero-Trust)
         run: |
