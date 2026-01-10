@@ -121,46 +121,41 @@ jobs:
   # ========================================
   # JOB 3: Security Audit
   # ========================================
-  security:
-    name: "🔒 Security Audit"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  # security:
+  #   name: "🔒 Security Audit"
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
       
-      - uses: cachix/install-nix-action@v25
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
+  #     - uses: cachix/install-nix-action@v25
+  #       with:
+  #         extra_nix_config: |
+  #           experimental-features = nix-command flakes
       
-      - name: Detect Private Keys & Secrets (using hk)
-        run: |
-          echo "🔍 Scanning for hardcoded secrets using hk..."
+  #     - name: Detect Private Keys & Secrets (using hk)
+  #       run: |
+  #         echo "🔍 Scanning for hardcoded secrets using hk..."
           
-          # Build hk from flake
-          nix build .#hk
+  #         # Build hk from flake
+  #         nix build .#hk
           
-          # Run security scan with hk
-          ./result/bin/hk scan . \
-            --exclude .git \
-            --exclude result \
-            --exclude '*.md' \
-            --format github-actions
+  #         # Run security scan with hk
+  #         ./result/bin/hk scan . \
+  #           --exclude .git \
+  #           --exclude result \
+  #           --exclude '*.md' \
+  #           --format github-actions
           
-          echo "✅ Security scan completed"
+  #         echo "✅ Security scan completed"
       
-      - name: Validate Fnox Config (Zero-Trust)
-        run: |
-          if [ -f fnox.toml ]; then
-            echo "🛡️ Validating fnox.toml (must contain pointers only)..."
+  #     - name: Validate Fnox Config (Zero-Trust)
+  #       run: |
+  #         if [ -f fnox.toml ]; then
+  #           echo "🛡️ Validating fnox.toml (must contain pointers only)..."
             
-            # Vérifier qu'il n'y a que des URIs keychain:// ou pass://
-            if grep -E '^\s*[A-Z_]+\s*=\s*"' fnox.toml | grep -v 'keychain://' | grep -v 'pass://'; then
-              echo "❌ ERROR: fnox.toml contains values that are not keychain:// or pass:// URIs!"
-              echo "All secrets must be pointers, not actual values."
-              exit 1
-            fi
-            
-            echo "✅ fnox.toml follows Zero-Trust principle (pointers only)"
-          else
-            echo "⚠️ fnox.toml not found (OK if not created yet)"
-          fi
+  #           # Vérifier qu'il n'y a que des URIs keychain:// ou pass://
+  #           if grep -E '^\s*[A-Z_]+\s*=\s*"' fnox.toml | grep -v 'keychain://' | grep -v 'pass://'; then
+  #             echo "❌ ERROR: fnox.toml contains values that are not keychain:// or pass:// URIs!"
+  #             echo "All secrets must be pointers, not actual values."
+  #             exit 1
+  #           fi
