@@ -151,6 +151,6 @@ jobs:
           # Créer un mode dry-run si absent
           DRY_RUN=1 ./${{ matrix.script }} || echo "Bootstrap needs dry-run mode implementation"
 
-          exit 1
-        fi
-        echo "✅ Fnox config OK (pointeurs uniquement)"
+            exit 1
+          fi
+          echo "✅ Fnox config OK (pointeurs uniquement)"
