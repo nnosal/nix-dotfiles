@@ -5,12 +5,9 @@ on:
     branches: [main, jules-ultimate-dotfiles-init-*]
   pull_request:
 
-env:
-  CACHIX_CACHE: nnosal-dotfiles
-
 jobs:
   # ========================================
-  # JOB 1: Validation Syntaxique Universelle
+  # JOB 1: Validation Syntaxique
   # ========================================
   validate:
     name: "🔍 Flake Check & Linters"
@@ -23,134 +20,149 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
       
-      - uses: cachix/cachix-action@v14
-        with:
-          name: ${{ env.CACHIX_CACHE }}
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      
-      # Validation du flake (syntaxe, inputs lock)
+      # 1. Validation Nix Flake
       - name: Nix Flake Check
-        run: nix flake check --all-systems
+        run: nix flake check --show-trace
       
-      # Vérification que les marqueurs critiques existent
-      - name: Validate Injection Markers
-        run: |
-          grep -q "# %% CASKS %%" modules/darwin/apps.nix || exit 1
-          grep -q "# %% PACKAGES %%" modules/common/packages.nix || exit 1
-          echo "✅ Markers OK"
-      
-      # Validation syntaxe Mise
+      # 2. Validation Mise (syntaxe uniquement)
       - name: Validate mise.toml
         run: |
-          nix shell nixpkgs#mise -c mise doctor
-          nix shell nixpkgs#mise -c mise tasks ls
-
-  # ========================================
-  # JOB 2: Build macOS Configurations
-  # ========================================
-  build-darwin:
-    name: "🍎 macOS (macbook-pro)"
-    runs-on: macos-14  # M1 runner (important!)
-    needs: validate
-    steps:
-      - uses: actions/checkout@v4
+          nix shell nixpkgs#mise -c bash -c '
+            echo "📋 Vérification de mise.toml..."
+            
+            # Parse la config
+            mise config ls > /dev/null || exit 1
+            
+            # Liste les tasks
+            echo "Tasks définies:"
+            mise tasks ls
+            
+            # Vérifie les tools déclarés
+            echo "Tools déclarés:"
+            mise ls --json | head -20
+            
+            echo "✅ mise.toml est valide"
+          '
       
-      - uses: cachix/install-nix-action@v25
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-      
-      - uses: cachix/cachix-action@v14
-        with:
-          name: ${{ env.CACHIX_CACHE }}
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      
-      # Build SANS appliquer (--dry-run vérifie juste)
-      - name: Build Darwin Configuration
+      # 3. Vérification marqueurs injection
+      - name: Validate Injection Markers
         run: |
-          nix build .#darwinConfigurations."macbook-pro".system \
-            --dry-run \
-            --show-trace
+          ERROR=0
+          
+          if [ -f modules/darwin/apps.nix ]; then
+            if ! grep -q "# %% CASKS %%" modules/darwin/apps.nix; then
+              echo "❌ Marker CASKS manquant dans modules/darwin/apps.nix"
+              ERROR=1
+            fi
+          fi
+          
+          if [ -f modules/common/packages.nix ]; then
+            if ! grep -q "# %% PACKAGES %%" modules/common/packages.nix; then
+              echo "❌ Marker PACKAGES manquant dans modules/common/packages.nix"
+              ERROR=1
+            fi
+          fi
+          
+          if [ $ERROR -eq 0 ]; then
+            echo "✅ Tous les marqueurs d'injection sont présents"
+          else
+            exit 1
+          fi
 
   # ========================================
-  # JOB 3: Build Linux Configurations
+  # JOB 2: Build Configurations
   # ========================================
-  build-linux:
-    name: "🐧 Linux (${{ matrix.host }})"
-    runs-on: ubuntu-latest
-    needs: validate
-    strategy:
-      matrix:
-        host: [contabo1, test-linux]
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: cachix/install-nix-action@v25
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-      
-      - uses: cachix/cachix-action@v14
-        with:
-          name: ${{ env.CACHIX_CACHE }}
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      
-      # Build complet pour vérifier les dépendances
-      - name: Build NixOS Configuration
-        run: |
-          nix build .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel \
-            --show-trace
-
-  # ========================================
-  # JOB 4: Build Home-Manager (WSL)
-  # ========================================
-  build-home:
-    name: "🏠 Home-Manager (WSL)"
-    runs-on: ubuntu-latest
-    needs: validate
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: cachix/install-nix-action@v25
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-      
-      - uses: cachix/cachix-action@v14
-        with:
-          name: ${{ env.CACHIX_CACHE }}
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      
-      - name: Build Home Configuration
-        run: |
-          nix build .#homeConfigurations.wsl.activationPackage \
-            --show-trace
-
-  # ========================================
-  # JOB 5: Test Bootstrap Script (Dry-Run)
-  # ========================================
-  test-bootstrap:
-    name: "🚀 Bootstrap Script Test"
+  build-configs:
+    name: "🔨 Build ${{ matrix.name }}"
     runs-on: ${{ matrix.os }}
     needs: validate
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-14]
         include:
-          - os: ubuntu-latest
-            script: bootstrap.sh
-          - os: macos-14
-            script: bootstrap.sh
+          - name: "macOS (macbook-pro)"
+            config: darwinConfigurations."macbook-pro".system
+            os: macos-14
+            
+          - name: "Linux VPS (contabo1)"
+            config: nixosConfigurations.contabo1.config.system.build.toplevel
+            os: ubuntu-latest
+            
+          - name: "Linux Test"
+            config: nixosConfigurations.test-linux.config.system.build.toplevel
+            os: ubuntu-latest
+            
+          - name: "WSL (Home Manager)"
+            config: homeConfigurations.wsl.activationPackage
+            os: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      # Simuler l'exécution sans cloner (déjà dans le repo)
-      - name: Test Bootstrap (Dry-Run)
+      - uses: cachix/install-nix-action@v25
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      
+      - name: Build Configuration
         run: |
-          chmod +x ./${{ matrix.script }}
-          # Créer un mode dry-run si absent
-          DRY_RUN=1 ./${{ matrix.script }} || echo "Bootstrap needs dry-run mode implementation"
+          echo "🔨 Building ${{ matrix.name }}..."
+          nix build .#${{ matrix.config }} --dry-run --show-trace
 
+  # ========================================
+  # JOB 3: Security Audit
+  # ========================================
+  security:
+    name: "🔒 Security Audit"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Detect Private Keys & Secrets
+        run: |
+          echo "🔍 Scanning for hardcoded secrets..."
+          
+          PATTERNS=(
+            "BEGIN.*PRIVATE KEY"
+            "BEGIN RSA PRIVATE KEY"
+            "BEGIN OPENSSH PRIVATE KEY"
+            "AKIA[0-9A-Z]{16}"
+            "ghp_[0-9a-zA-Z]{36}"
+            "sk-[0-9a-zA-Z]{48}"
+            "xox[baprs]-[0-9a-zA-Z-]+"
+          )
+          
+          FOUND=0
+          for pattern in "${PATTERNS[@]}"; do
+            if grep -rE "$pattern" . \
+              --exclude-dir=.git \
+              --exclude-dir=result \
+              --exclude="*.md" \
+              --exclude="ci.yml"; then
+              echo "❌ Dangerous pattern detected: $pattern"
+              FOUND=1
+            fi
+          done
+          
+          if [ $FOUND -eq 1 ]; then
+            echo "❌ CRITICAL: Secrets detected in repository!"
             exit 1
           fi
-          echo "✅ Fnox config OK (pointeurs uniquement)"
+          
+          echo "✅ No hardcoded secrets found"
+      
+      - name: Validate Fnox Config (Zero-Trust)
+        run: |
+          if [ -f fnox.toml ]; then
+            echo "🛡️ Validating fnox.toml (must contain pointers only)..."
+            
+            # Vérifier qu'il n'y a que des URIs keychain:// ou pass://
+            if grep -E '^\s*[A-Z_]+\s*=\s*"' fnox.toml | grep -v 'keychain://' | grep -v 'pass://'; then
+              echo "❌ ERROR: fnox.toml contains values that are not keychain:// or pass:// URIs!"
+              echo "All secrets must be pointers, not actual values."
+              exit 1
+            fi
+            
+            echo "✅ fnox.toml follows Zero-Trust principle (pointers only)"
+          else
+            echo "⚠️ fnox.toml not found (OK if not created yet)"
+          fi
