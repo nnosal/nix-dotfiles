@@ -15,7 +15,11 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
 if (-not (Get-Command mise -ErrorAction SilentlyContinue)) {
     Write-Host "📦 Installing Mise..."
     winget install jdx.mise --accept-source-agreements --accept-package-agreements
-    $env:Path = "C:\Users\$env:USERNAME\AppData\Local\mise\bin;$env:Path"
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+    if (!(Get-Command mise -ErrorAction SilentlyContinue)) {
+        Write-Host "Mise n'est pas dans le PATH. Installation échouée." -ForegroundColor Red
+        exit 1
+    }
 }
 
 # 3. Clone Repo

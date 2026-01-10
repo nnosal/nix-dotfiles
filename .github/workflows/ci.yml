@@ -133,6 +133,9 @@ jobs:
           echo "👤 Current user: $CURRENT_USER"
           sed -i '' "s/system.primaryUser = \"admin\";/system.primaryUser = \"$USER\";/" modules/darwin/default.nix
           
+          # Fix for modern UUID
+          curl --proto '=https' --tlsv1.2 -sSf -L https://github.com/NixOS/nix/raw/master/scripts/sequoia-nixbld-user-migration.sh | bash -
+
           # Exécuter le switch avec l'utilisateur adapté
           cachix watch-exec nnosal-dotfiles -- \
             sudo nix --extra-experimental-features "nix-command flakes" \
@@ -149,19 +152,6 @@ jobs:
     needs: validate
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Update bootstrap.ps1 URLs
-        shell: pwsh
-        run: |
-          Write-Host "🔧 Updating bootstrap.ps1 with correct repo URLs..." -ForegroundColor Cyan
-          
-          # Remplacer les URLs obsolètes dans bootstrap.ps1
-          $content = Get-Content bootstrap.ps1 -Raw
-          $content = $content -replace 'nnosal/dotfiles', 'nnosal/nix-dotfiles'
-          $content = $content -replace 'https://github.com/nnosal/dotfiles.git', 'https://github.com/nnosal/nix-dotfiles.git'
-          Set-Content bootstrap.ps1 -Value $content
-          
-          Write-Host "✅ URLs updated" -ForegroundColor Green
       
       - name: Test bootstrap.ps1 (Dry Run)
         shell: pwsh
