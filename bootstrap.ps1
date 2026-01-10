@@ -1,5 +1,5 @@
 # Windows Bootstrap Script (PowerShell)
-# Usage: iex (irm https://dotfiles.nnosal.com/win)
+# Usage: iex (irm https://raw.githubusercontent.com/nnosal/nix-dotfiles/main/bootstrap.ps1)
 
 Write-Host "🚀 Ultimate Dotfiles Windows Bootstrap" -ForegroundColor Cyan
 
@@ -21,7 +21,7 @@ if (-not (Get-Command mise -ErrorAction SilentlyContinue)) {
 # 3. Clone Repo
 if (-not (Test-Path $DotfilesDir)) {
     Write-Host "📂 Cloning dotfiles..."
-    git clone https://github.com/nnosal/dotfiles.git $DotfilesDir
+    git clone https://github.com/nnosal/nix-dotfiles.git $DotfilesDir
 }
 
 Set-Location $DotfilesDir
