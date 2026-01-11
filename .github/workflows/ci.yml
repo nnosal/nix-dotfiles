@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  build-configs:
+  test-unix-bootstrap:
     name: "🔨 Build ${{ matrix.name }}"
     runs-on: ${{ matrix.os }}
     # needs: validate # À décommenter si vous avez un job nommé validate
@@ -18,7 +18,10 @@ jobs:
             config: nixosConfigurations.test-linux.config.system.build.toplevel
             os: ubuntu-latest
             is-darwin: false
-            
+          - name: "macOS (macbook-pro)"
+            config: darwinConfigurations."macbook-pro".system
+            os: macos-14
+            is-darwin: true
     steps:
       - uses: actions/checkout@v4
 
@@ -27,8 +30,22 @@ jobs:
       # ou au sein d'un même script complexe.
       - name: Run Bootstrap
         run: |
-          echo "🔨 Building ${{ matrix.name }}..."
+          echo "🔨 Test bootstrap ${{ matrix.name }}..."
           export CI=true
           chmod +x ./bootstrap.sh ./i.sh
           ./bootstrap.sh
+          echo "🔨 Building ${{ matrix.name }}..."
+          nix build .#${{ matrix.config }} --dry-run --show-trace
         shell: bash
+  test-windows-bootstrap:
+    name: "🪟 Test Windows Bootstrap"
+    runs-on: windows-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Test bootstrap.ps1 (Dry Run)
+        shell: pwsh
+        run: |
+          Write-Host "🧪 Testing Windows bootstrap script..." -ForegroundColor Cyan
+          irm https://raw.githubusercontent.com/nnosal/nix-dotfiles/refs/heads/main/bootstrap.ps1 | iex
