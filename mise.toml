@@ -8,6 +8,7 @@ pkl = "latest"      # Config language pour hk
 #nh = "latest"       # Nix Helper (Speed up builds & GC)
 stylua = "latest"   # Formatter Lua (Neovim)
 shfmt = "latest"    # Formatter Bash
+act = "latest"
 
 [tasks.install]
 description = "Bootstrap initial post-clone"

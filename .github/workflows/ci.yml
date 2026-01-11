@@ -15,19 +15,19 @@ jobs:
       matrix:
         include:
           - name: "Linux Test"
-            config: nixosConfigurations.test-linux.config.system.build.toplevel
+            config: 
+              name: "test-linux"
+              build: nixosConfigurations.test-linux.config.system.build.toplevel
             os: ubuntu-latest
             is-darwin: false
           - name: "macOS (macbook-pro)"
-            config: darwinConfigurations."macbook-pro".system
+            config: 
+              name: "macbook-pro"
+              build: darwinConfigurations."macbook-pro".system
             os: macos-14
             is-darwin: true
     steps:
       - uses: actions/checkout@v4
-
-      # Note : bootstrap.sh installe Nix, mais dans GitHub Actions, 
-      # les changements de PATH ne survivent pas toujours entre les étapes 
-      # ou au sein d'un même script complexe.
       - name: Run Bootstrap
         run: |
           echo "🔨 Test bootstrap ${{ matrix.name }}..."
@@ -35,15 +35,21 @@ jobs:
           chmod +x ./bootstrap.sh ./i.sh
           . ./bootstrap.sh
           echo "🔨 Building ${{ matrix.name }}..."
-          nix build .#${{ matrix.config }} --dry-run --show-trace
+          nix build .#{{ matrix.config.build }} --dry-run --show-trace
         shell: bash
+      - name: Test nix-darwin switch (README validation)
+        if: matrix.is-darwin == true
+        run: |
+          echo "🔨 Testing nix-darwin switch on ${{ matrix.name }}..."
+          export CI=true;
+          . ./bootstrap.sh
+          sudo darwin-rebuild switch --flake .#{{ matrix.config.name }} --dry-run
   test-windows-bootstrap:
     name: "🪟 Test Windows Bootstrap"
     runs-on: windows-latest
     #needs: validate
     steps:
       - uses: actions/checkout@v4
-      
       - name: Test bootstrap.ps1 (Dry Run)
         shell: pwsh
         run: |
