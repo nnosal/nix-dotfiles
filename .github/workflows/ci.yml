@@ -44,7 +44,8 @@ jobs:
           echo "🔨 Testing nix-darwin switch on ${{ matrix.name }}..."
           export CI=true;
           . ./bootstrap.sh
-          nh darwin switch .#${{ matrix.config.name }} 
+          nix build .#${{ matrix.config.build }} --show-trace
+          nh darwin switch
           #sudo darwin-rebuild switch --flake .#${{ matrix.config.name }} --dry-run
   test-windows-bootstrap:
     name: "🪟 Test Windows Bootstrap"
