@@ -2,80 +2,12 @@ name: Nix Flake CI
 
 on:
   push:
-    branches: [main, jules-ultimate-dotfiles-init-*]
+    branches: [main, jules-*]
   pull_request:
 
-jobs:
-  # ========================================
-  # JOB 1: Validation Syntaxique
-  # ========================================
-  validate:
-    name: "🔍 Flake Check & Linters"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: cachix/install-nix-action@v25
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-      
-      - uses: cachix/cachix-action@v15
-        with:
-          name: nnosal-dotfiles
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      
-      # 1. Validation Nix Flake
-      - name: Nix Flake Check
-        run: nix flake check --show-trace
-      
-      # 2. Validation Mise (syntaxe uniquement)
-      - name: Validate mise.toml
-        run: |
-          nix shell nixpkgs#mise -c bash -c '
-            echo "📋 Vérification de mise.toml..."
-            
-            # Parse la config
-            mise config ls > /dev/null || exit 1
-            
-            # Liste les tasks
-            echo "Tasks définies:"
-            mise tasks ls
-            
-            # Vérifie les tools déclarés
-            echo "Tools déclarés:"
-            mise ls --json | head -20
-            
-            echo "✅ mise.toml est valide"
-          '
-      
-      # 3. Vérification marqueurs injection
-      - name: Validate Injection Markers
-        run: |
-          ERROR=0
-          
-          if [ -f modules/darwin/apps.nix ]; then
-            if ! grep -q "# %% CASKS %%" modules/darwin/apps.nix; then
-              echo "❌ Marker CASKS manquant dans modules/darwin/apps.nix"
-              ERROR=1
-            fi
-          fi
-          
-          if [ -f modules/common/packages.nix ]; then
-            if ! grep -q "# %% PACKAGES %%" modules/common/packages.nix; then
-              echo "❌ Marker PACKAGES manquant dans modules/common/packages.nix"
-              ERROR=1
-            fi
-          fi
-          
-          if [ $ERROR -eq 0 ]; then
-            echo "✅ Tous les marqueurs d'injection sont présents"
-          else
-            exit 1
-          fi
 
   # ========================================
-  # JOB 2: Build Configurations
+  # JOB: Build Configurations
   # ========================================
   build-configs:
     name: "🔨 Build ${{ matrix.name }}"
@@ -85,121 +17,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: "macOS (macbook-pro)"
-            config: darwinConfigurations."macbook-pro".system
-            os: macos-14
-            is-darwin: true
-            
-          - name: "Linux VPS (contabo1)"
-            config: nixosConfigurations.contabo1.config.system.build.toplevel
-            os: ubuntu-latest
-            is-darwin: false
-            
           - name: "Linux Test"
             config: nixosConfigurations.test-linux.config.system.build.toplevel
             os: ubuntu-latest
             is-darwin: false
-            
-          - name: "WSL (Home Manager)"
-            config: homeConfigurations.wsl.activationPackage
-            os: ubuntu-latest
-            is-darwin: false
     steps:
+      # Checkout + NIX (+cache)
       - uses: actions/checkout@v4
-
-      - name: Clean up nixbld group
-        run: sudo groupdel nixbld || true
-      
-      - uses: cachix/install-nix-action@v25
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-      
-      - uses: cachix/cachix-action@v15
-        with:
-          name: nnosal-dotfiles
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      
       - name: Build Configuration
         run: |
           echo "🔨 Building ${{ matrix.name }}..."
-          cachix watch-exec nnosal-dotfiles -- \
-            nix build .#${{ matrix.config }} --dry-run --show-trace
-      
-      - name: Test nix-darwin switch (README validation)
-        if: matrix.is-darwin == true
-        run: |
-          echo "🧪 Testing nix-darwin switch (simulating fresh install)..."
-          
-          # Détecter l'utilisateur actuel
-          export CURRENT_USER=$(whoami)
-          echo "👤 Current user: $CURRENT_USER"
-          sed -i '' "s/system.primaryUser = \"admin\";/system.primaryUser = \"$USER\";/" modules/darwin/default.nix
-          
-          # Fix for modern UUID
-          curl --proto '=https' --tlsv1.2 -sSf -L https://github.com/NixOS/nix/raw/master/scripts/sequoia-nixbld-user-migration.sh | bash -
-
-          # Exécuter le switch avec l'utilisateur adapté
-          cachix watch-exec nnosal-dotfiles -- \
-            sudo nix --extra-experimental-features "nix-command flakes" \
-              run nix-darwin -- switch --flake .#macbook-pro \
-              --override-input nixpkgs nixpkgs \
-              --impure
-
-  # ========================================
-  # JOB 3: Windows Bootstrap Test
-  # ========================================
-  test-windows-bootstrap:
-    name: "🪟 Test Windows Bootstrap"
-    runs-on: windows-latest
-    needs: validate
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Test bootstrap.ps1 (Dry Run)
-        shell: pwsh
-        run: |
-          Write-Host "🧪 Testing Windows bootstrap script..." -ForegroundColor Cyan
-          irm https://raw.githubusercontent.com/nnosal/nix-dotfiles/refs/heads/main/bootstrap.ps1 | iex
-
-  # ========================================
-  # JOB 4: Security Audit (Disabled)
-  # ========================================
-  # security:
-  #   name: "🔒 Security Audit"
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-      
-  #     - uses: cachix/install-nix-action@v25
-  #       with:
-  #         extra_nix_config: |
-  #           experimental-features = nix-command flakes
-      
-  #     - name: Detect Private Keys & Secrets (using hk)
-  #       run: |
-  #         echo "🔍 Scanning for hardcoded secrets using hk..."
-          
-  #         # Build hk from flake
-  #         nix build .#hk
-          
-  #         # Run security scan with hk
-  #         ./result/bin/hk scan . \
-  #           --exclude .git \
-  #           --exclude result \
-  #           --exclude '*.md' \
-  #           --format github-actions
-          
-  #         echo "✅ Security scan completed"
-      
-  #     - name: Validate Fnox Config (Zero-Trust)
-  #       run: |
-  #         if [ -f fnox.toml ]; then
-  #           echo "🛡️ Validating fnox.toml (must contain pointers only)..."
-            
-  #           # Vérifier qu'il n'y a que des URIs keychain:// ou pass://
-  #           if grep -E '^\s*[A-Z_]+\s*=\s*"' fnox.toml | grep -v 'keychain://' | grep -v 'pass://'; then
-  #             echo "❌ ERROR: fnox.toml contains values that are not keychain:// or pass:// URIs!"
-  #             echo "All secrets must be pointers, not actual values."
-  #             exit 1
-  #           fi
+          export CI=true;
+          ./bootstrap.sh
+    

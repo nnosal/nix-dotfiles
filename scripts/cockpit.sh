@@ -25,7 +25,7 @@ if [ "$APPLY_ONLY" = "true" ]; then
 
     # 2. Nix Switch (using nh if available, else nix)
     if command -v nh >/dev/null; then
-        nh os switch .
+        nh os switch --impure .
     else
         # Fallback detection
         if [ "$(uname)" = "Darwin" ]; then

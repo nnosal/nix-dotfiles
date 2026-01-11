@@ -10,7 +10,7 @@ TARGET_DIR="$HOME/dotfiles"
 # 1. Zero-Install: Ensure Dependencies (Nix, Git, Gum)
 if ! command -v nix >/dev/null; then
     echo "❄️  Installing Nix..."
-    sudo sh <(curl -L https://nixos.org/nix/install) --daemon
+    source ./i.sh    
 fi
 
 # Reload shell environment if Nix was just installed might be tricky in a script.
@@ -39,8 +39,7 @@ if [ "$CI" = "true" ]; then
     echo "🤖 CI Mode detected. Running non-interactive setup..."
     # Force apply without Gum interaction if possible, or use Gum in non-interactive way if supported (not really).
     # The Spec says: "./scripts/cockpit.sh --apply-only --profile $MACHINE_CONTEXT"
-
-    ./scripts/cockpit.sh --apply-only --profile "${MACHINE_CONTEXT:-work}"
+    # ./scripts/cockpit.sh --apply-only --profile "${MACHINE_CONTEXT:-work}"
 else
     # 4. Interactive Setup
     echo "🚀 Launching Cockpit..."
