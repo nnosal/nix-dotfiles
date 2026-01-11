@@ -45,7 +45,7 @@ jobs:
           export CI=true;
           . ./bootstrap.sh
           nix build .#${{ matrix.config.build }} --show-trace
-          nh darwin switch
+          nh darwin switch .
           #sudo darwin-rebuild switch --flake .#${{ matrix.config.name }} --dry-run
   test-windows-bootstrap:
     name: "🪟 Test Windows Bootstrap"
