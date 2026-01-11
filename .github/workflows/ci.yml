@@ -28,7 +28,8 @@ jobs:
             is-darwin: true
     steps:
       - uses: actions/checkout@v4
-      - name: Run Bootstrap
+      - name: Run Bootstrap and Build (Linux)
+        if: matrix.is-darwin == false
         run: |
           echo "🔨 Test bootstrap ${{ matrix.name }}..."
           export CI=true
@@ -37,7 +38,7 @@ jobs:
           echo "🔨 Building ${{ matrix.name }}..."
           nix build .#${{ matrix.config.build }} --dry-run --show-trace
         shell: bash
-      - name: Test nix-darwin switch (README validation)
+      - name: Run Bootstrap and Build (macOS)
         if: matrix.is-darwin == true
         run: |
           echo "🔨 Testing nix-darwin switch on ${{ matrix.name }}..."
