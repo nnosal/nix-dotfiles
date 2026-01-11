@@ -31,7 +31,6 @@
       darwinConfigurations."macbook-pro" = lib.mkSystem {
         system = "aarch64-darwin";
         modules = [ ./hosts/pro/macbook-pro/default.nix ];
-        ids.gids.nixbld = 30000;
       };
 
       # Entry point for Linux Servers (NixOS)
