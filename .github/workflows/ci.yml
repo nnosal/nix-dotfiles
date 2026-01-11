@@ -106,9 +106,11 @@ jobs:
             is-darwin: false
     steps:
       - uses: actions/checkout@v4
+
+      - name: Clean up nixbld group
+        run: sudo groupdel nixbld || true
       
       - uses: cachix/install-nix-action@v25
-        install_options: '--build-users-group nixbld'
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
