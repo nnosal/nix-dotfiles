@@ -33,9 +33,9 @@ jobs:
           echo "🔨 Test bootstrap ${{ matrix.name }}..."
           export CI=true
           chmod +x ./bootstrap.sh ./i.sh
-          ./bootstrap.sh
+          . ./bootstrap.sh
           echo "🔨 Building ${{ matrix.name }}..."
-          bash -c "nix build .#${{ matrix.config }} --dry-run --show-trace"
+          nix build .#${{ matrix.config }} --dry-run --show-trace
         shell: bash
   test-windows-bootstrap:
     name: "🪟 Test Windows Bootstrap"
