@@ -5,14 +5,11 @@ on:
     branches: [main, jules-*]
   pull_request:
 
-
-  # ========================================
-  # JOB: Build Configurations
-  # ========================================
+jobs:
   build-configs:
     name: "🔨 Build ${{ matrix.name }}"
     runs-on: ${{ matrix.os }}
-    needs: validate
+    # needs: validate # À décommenter si vous avez un job nommé validate
     strategy:
       fail-fast: false
       matrix:
@@ -21,12 +18,17 @@ on:
             config: nixosConfigurations.test-linux.config.system.build.toplevel
             os: ubuntu-latest
             is-darwin: false
+            
     steps:
-      # Checkout + NIX (+cache)
       - uses: actions/checkout@v4
-      - name: Build Configuration
+
+      # Note : bootstrap.sh installe Nix, mais dans GitHub Actions, 
+      # les changements de PATH ne survivent pas toujours entre les étapes 
+      # ou au sein d'un même script complexe.
+      - name: Run Bootstrap
         run: |
           echo "🔨 Building ${{ matrix.name }}..."
-          export CI=true;
+          export CI=true
+          chmod +x ./bootstrap.sh ./i.sh
           ./bootstrap.sh
-    
+        shell: bash
