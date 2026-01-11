@@ -35,7 +35,7 @@ jobs:
           chmod +x ./bootstrap.sh ./i.sh
           ./bootstrap.sh
           echo "🔨 Building ${{ matrix.name }}..."
-          nix build .#${{ matrix.config }} --dry-run --show-trace
+          zsh -c "nix build .#${{ matrix.config }} --dry-run --show-trace"
         shell: bash
   test-windows-bootstrap:
     name: "🪟 Test Windows Bootstrap"
