@@ -10,7 +10,7 @@ TARGET_DIR="$HOME/dotfiles"
 # 1. Zero-Install: Ensure Dependencies (Nix, Git, Gum)
 if ! command -v nix >/dev/null; then
     echo "❄️  Installing Nix..."
-    sh <(curl -L https://nixos.org/nix/install) --daemon
+    sudo sh <(curl -L https://nixos.org/nix/install) --daemon
 fi
 
 # Reload shell environment if Nix was just installed might be tricky in a script.
